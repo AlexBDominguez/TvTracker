@@ -72,18 +72,7 @@ tests/
 - **Nada de rutas absolutas, IPs fijas o puertos hardcodeados** en el código — todo configurable por entorno, pensando en el despliegue `[FUTURO]` en VPS.
 - **No implementar tareas `[FUTURO]`** (despliegue en VPS, Redis, etc.) salvo que se pida explícitamente.
 
-## Plan de trabajo por fases
-
-1. **Fase 0 — Bootstrap** ✅ hecho: estructura de carpetas, `pyproject.toml`/`requirements.txt`, `main.py` mínimo, `docker-compose.yml` local, `.env.example`, README.
-2. **Fase 1 — Modelo de datos y migraciones**: modelos `User` y `TraktCredentials`, Alembic, primera migración.
-3. **Fase 2 — Autenticación local**: `POST /auth/register`, `POST /auth/login`, hashing, JWT, `get_current_user`.
-4. **Fase 3 — Integración Trakt OAuth2**: `/auth/trakt/connect`, `/auth/trakt/callback`, guardado y refresco de tokens.
-5. **Fase 4 — Proxy TMDB**: `/search`, `/shows/{id}`, con caché en memoria.
-6. **Fase 5 — Sync con Trakt**: `/sync/watchlist`, `POST /sync/history`, `DELETE /sync/history`.
-7. **Fase 6 — Endurecimiento**: manejo uniforme de errores, CORS, logging, tests básicos, revisión de secretos/config hardcodeada.
-8. **Fase 7 `[FUTURO]`**: preparación de despliegue en VPS. No abordar hasta validar el resto en local.
-
-Antes de empezar una fase nueva, confirma con la persona qué fase toca — no asumas ni saltes fases.
+El plan de trabajo por fases vive en la sección 7 de [REQUISITOS_BACKEND.md](./REQUISITOS_BACKEND.md) — no se duplica aquí. Antes de empezar una fase nueva, confirma con la persona qué fase toca — no asumas ni saltes fases.
 
 ## Comandos habituales
 

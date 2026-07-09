@@ -185,10 +185,10 @@ Centralizar esto con un exception handler global de FastAPI (`core/exceptions.py
 
 ## 7. Plan de trabajo por fases (para ir dando prompts a Claude Code)
 
-1. **Fase 0 — Bootstrap del proyecto**
+1. **Fase 0 — Bootstrap del proyecto** ✅ hecho
    Estructura de carpetas, `pyproject.toml`/`requirements.txt`, `main.py` mínimo con FastAPI arrancando, `docker-compose.yml` local con `mysql` + `backend`, `.env.example`, README con instrucciones de arranque.
 
-2. **Fase 1 — Modelo de datos y migraciones**
+2. **Fase 1 — Modelo de datos y migraciones** ✅ hecho
    Modelos SQLAlchemy `User` y `TraktCredentials`, configuración de Alembic, primera migración aplicada contra el MySQL local.
 
 3. **Fase 2 — Autenticación local**

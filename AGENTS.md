@@ -111,6 +111,7 @@ ruff check .
 ## Convenciones de commits
 
 - Los commits **no** deben incluir la firma `Co-Authored-By: Claude` (ni de ningún otro agente de IA).
+- Mensajes de commit **en inglés**.
 
 ## Referencias externas
 

@@ -47,8 +47,10 @@
 
 ## 2. Estructura de proyecto recomendada
 
+> Nota: en el repo real este árbol vive bajo `backend/` (monorepo, con `frontend/` reservado para la app Flutter más adelante).
+
 ```
-tvtime-backend/
+backend/
 ├── app/
 │   ├── main.py                  # instancia FastAPI, monta routers, middlewares
 │   ├── core/

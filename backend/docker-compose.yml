@@ -1,3 +1,5 @@
+name: tvtracker
+
 services:
   mysql:
     image: mysql:8

@@ -41,23 +41,26 @@ La especificación técnica completa vive en [REQUISITOS_BACKEND.md](./REQUISITO
 
 ## Estructura de proyecto
 
+Monorepo: `backend/` contiene todo el código Python; en el futuro `frontend/` contendrá la app Flutter. Los documentos de nivel raíz (este fichero, `CLAUDE.md`, `REQUISITOS_BACKEND.md`) aplican a todo el repo y no se duplican dentro de cada carpeta.
+
 ```
-app/
-├── main.py                  # instancia FastAPI, monta routers, middlewares
-├── core/
-│   ├── config.py            # Settings (pydantic-settings) que lee .env
-│   ├── security.py          # hashing, creación/verificación JWT
-│   └── exceptions.py        # manejo uniforme de errores
-├── db/
-│   ├── session.py           # engine + sessionmaker async
-│   └── base.py               # Base declarativa
-├── models/                  # tablas SQLAlchemy (user, trakt_credentials, ...)
-├── schemas/                  # DTOs Pydantic (request/response)
-├── api/v1/                   # routers: auth, trakt_auth, content, sync
-├── services/                  # tmdb_client, trakt_client, cache
-└── dependencies.py           # get_db, get_current_user, etc.
-alembic/                      # migraciones
-tests/
+backend/
+├── app/
+│   ├── main.py                  # instancia FastAPI, monta routers, middlewares
+│   ├── core/
+│   │   ├── config.py            # Settings (pydantic-settings) que lee .env
+│   │   ├── security.py          # hashing, creación/verificación JWT
+│   │   └── exceptions.py        # manejo uniforme de errores
+│   ├── db/
+│   │   ├── session.py           # engine + sessionmaker async
+│   │   └── base.py               # Base declarativa
+│   ├── models/                  # tablas SQLAlchemy (user, trakt_credentials, ...)
+│   ├── schemas/                  # DTOs Pydantic (request/response)
+│   ├── api/v1/                   # routers: auth, trakt_auth, content, sync
+│   ├── services/                  # tmdb_client, trakt_client, cache
+│   └── dependencies.py           # get_db, get_current_user, etc.
+├── alembic/                      # migraciones
+└── tests/
 ```
 
 ## Convenciones y reglas de trabajo
@@ -76,7 +79,11 @@ El plan de trabajo por fases vive en la sección 7 de [REQUISITOS_BACKEND.md](./
 
 ## Comandos habituales
 
+Todos se ejecutan con `backend/` como directorio de trabajo.
+
 ```bash
+cd backend
+
 # Arranque completo con Docker
 docker compose up --build
 
@@ -86,9 +93,9 @@ docker compose up mysql
 # Backend sin Docker
 uvicorn app.main:app --reload
 
-# Migraciones
-alembic revision --autogenerate -m "mensaje"
-alembic upgrade head
+# Migraciones (dentro del contenedor backend)
+docker compose exec backend alembic revision --autogenerate -m "mensaje"
+docker compose exec backend alembic upgrade head
 
 # Tests
 pytest

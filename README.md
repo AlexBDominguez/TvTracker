@@ -1,52 +1,9 @@
-# TvTime Clone — Backend
+# TvTracker
 
-API Gateway en Python/FastAPI entre el frontend Flutter, MySQL y las APIs de Trakt.tv y TMDB.
-Ver [REQUISITOS_BACKEND.md](./REQUISITOS_BACKEND.md) para la especificación completa.
+Clon simplificado de TvTime — tracking de series y películas.
 
-## Fase actual: Fase 0 — Bootstrap
+- **Backend** (Python/FastAPI): ver [backend/](./backend/) y [backend/README.md](./backend/README.md) para arrancarlo.
+- **Frontend** (Flutter): pendiente, vivirá en `frontend/` cuando se empiece.
 
-Estructura del proyecto, FastAPI mínimo con `/health`, y entorno local con Docker.
-
-## Requisitos
-
-- Python 3.12+
-- Docker y Docker Compose
-
-## Arranque en local con Docker (recomendado)
-
-```bash
-cp .env.example .env
-# Rellena TMDB_API_KEY, TRAKT_CLIENT_ID/SECRET, JWT_SECRET_KEY, etc.
-
-docker compose up --build
-```
-
-- API disponible en http://localhost:8000
-- Swagger UI (contrato para el frontend) en http://localhost:8000/docs
-- Healthcheck: http://localhost:8000/health
-- MySQL expuesto en `localhost:3306` (usuario/clave/DB definidos en `.env`)
-
-## Arranque en local sin Docker
-
-Requiere un MySQL accesible en `localhost:3306` (puedes levantar solo ese servicio con
-`docker compose up mysql`).
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-cp .env.example .env
-# En este modo, DATABASE_URL debe apuntar a host=localhost (ya es el default en .env.example)
-
-uvicorn app.main:app --reload
-```
-
-## Variables de entorno
-
-Ver `.env.example` para la lista completa y comentada. Nunca se commitea un `.env` real
-(está en `.gitignore`); solo `.env.example` con claves vacías.
-
-## Estructura del proyecto
-
-Ver sección 2 de [REQUISITOS_BACKEND.md](./REQUISITOS_BACKEND.md).
+Antes de trabajar en el repo, lee [AGENTS.md](./AGENTS.md) (guía operativa para agentes de IA) y
+[REQUISITOS_BACKEND.md](./REQUISITOS_BACKEND.md) (especificación técnica del backend, fuente de verdad).

@@ -5,7 +5,9 @@ import 'package:frontend/core/theme/colors.dart';
 import 'package:frontend/features/series_detail/application/series_detail_providers.dart';
 import 'package:frontend/features/series_detail/presentation/widgets/detail_info_row.dart';
 import 'package:frontend/features/series_detail/presentation/widgets/episode_list_tile.dart';
+import 'package:frontend/shared/widgets/episode_card_shimmer.dart';
 import 'package:frontend/shared/widgets/error_display.dart';
+import 'package:frontend/shared/widgets/shimmer_loading.dart';
 
 class SeriesDetailScreen extends ConsumerStatefulWidget {
   final int seriesId;
@@ -140,7 +142,15 @@ class _SeriesDetailScreenState extends ConsumerState<SeriesDetailScreen> with Si
                         itemCount: episodeList.length,
                         itemBuilder: (context, index) => EpisodeListTile(episode: episodeList[index]),
                       ),
-                      loading: () => const Center(child: CircularProgressIndicator()),
+                      loading: () => ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 10,
+                        itemBuilder: (context, index) => const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          child: EpisodeCardShimmer(),
+                        ),
+                      ),
                       error: (err, stack) => ErrorDisplay(
                         message: 'No se pudieron cargar los episodios.',
                         onRetry: () => ref.invalidate(seasonEpisodesProvider),
@@ -163,7 +173,7 @@ class _SeriesDetailScreenState extends ConsumerState<SeriesDetailScreen> with Si
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: ShimmerLoading(width: double.infinity, height: double.infinity)),
         error: (err, stack) => ErrorDisplay(
           message: 'No se pudo cargar la información de la serie.',
           onRetry: () => ref.invalidate(seriesDetailProvider(widget.seriesId)),

@@ -196,7 +196,7 @@ Centralizar esto con un exception handler global de FastAPI (`core/exceptions.py
 3. **Fase 2 — Autenticación local** ✅ hecho
    `POST /auth/register`, `POST /auth/login`, hashing de contraseñas, emisión y verificación de JWT, dependencia `get_current_user`.
 
-4. **Fase 3 — Integración Trakt OAuth2**
+4. **Fase 3 — Integración Trakt OAuth2** ✅ hecho
    `GET /auth/trakt/connect`, `GET /auth/trakt/callback`, guardado y refresco de tokens.
 
 5. **Fase 4 — Proxy TMDB**

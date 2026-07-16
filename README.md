@@ -21,7 +21,7 @@ Clon simplificado de [TvTime](https://www.tvtime.com/): tracking de series y pel
 
 - ✅ Autenticación local (registro/login con JWT)
 - ✅ Modelo de datos y migraciones (usuarios, credenciales de Trakt)
-- ⏳ Integración OAuth2 con Trakt.tv
+- ✅ Integración OAuth2 con Trakt.tv (tokens cifrados en reposo, refresco automático)
 - ⏳ Proxy/caché de contenido vía TMDB
 - ⏳ Sincronización de watchlist/historial con Trakt
 

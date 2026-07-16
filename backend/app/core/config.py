@@ -28,8 +28,9 @@ class Settings(BaseSettings):
     TRAKT_REDIRECT_URI: str = ""
     TRAKT_BASE_URL: str = "https://api.trakt.tv"
 
-    # Token encryption at rest (Fernet key)
-    TOKEN_ENCRYPTION_KEY: str = ""
+    # Token encryption at rest (Fernet key). Generate with:
+    # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    TOKEN_ENCRYPTION_KEY: str
 
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:3000"

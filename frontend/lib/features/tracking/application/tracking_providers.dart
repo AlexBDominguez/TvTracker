@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/repositories/tracking_repository.dart';
 
@@ -11,25 +12,27 @@ class WatchedEpisodesNotifier extends StateNotifier<Set<int>> {
 
   WatchedEpisodesNotifier(this._trackingRepository, Set<int> initialWatched) : super(initialWatched);
 
-  Future<void> toggleWatched(int episodeId) async {
+  Future<void> toggleWatched(BuildContext context, int episodeId) async {
     final isWatched = state.contains(episodeId);
     if (isWatched) {
       state = state.difference({episodeId});
       try {
         await _trackingRepository.removeFromWatched(episodeId);
       } catch (e) {
-        // If the request fails, revert the state
         state = state.union({episodeId});
-        rethrow;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al desmarcar el episodio.')),
+        );
       }
     } else {
       state = state.union({episodeId});
       try {
         await _trackingRepository.markAsWatched(episodeId);
       } catch (e) {
-        // If the request fails, revert the state
         state = state.difference({episodeId});
-        rethrow;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al marcar el episodio.')),
+        );
       }
     }
   }

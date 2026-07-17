@@ -1,4 +1,3 @@
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from jose import JWTError
 from sqlalchemy import select
@@ -36,12 +35,7 @@ async def callback(code: str, state: str, db: AsyncSession = Depends(get_db)) ->
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired state"
         )
 
-    try:
-        token_data = await exchange_code_for_tokens(code)
-    except httpx.HTTPError:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail="Trakt no disponible"
-        )
+    token_data = await exchange_code_for_tokens(code)
 
     expires_at = token_response_to_expiry(token_data)
     credentials = await db.scalar(
@@ -70,11 +64,6 @@ async def get_trakt_status(
     if credentials is None:
         return TraktStatus(connected=False)
 
-    try:
-        await get_valid_access_token(credentials, db)
-    except httpx.HTTPError:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail="Trakt no disponible"
-        )
+    await get_valid_access_token(credentials, db)
 
     return TraktStatus(connected=True, expires_at=credentials.expires_at)

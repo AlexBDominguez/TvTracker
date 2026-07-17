@@ -6,10 +6,16 @@ from app.api.v1.content import router as content_router
 from app.api.v1.sync import router as sync_router
 from app.api.v1.trakt_auth import router as trakt_auth_router
 from app.core.config import get_settings
+from app.core.exceptions import register_exception_handlers
+from app.core.logging import configure_logging
+
+configure_logging()
 
 settings = get_settings()
 
 app = FastAPI(title=settings.APP_NAME)
+
+register_exception_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,

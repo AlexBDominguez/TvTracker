@@ -1,4 +1,3 @@
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,13 +30,8 @@ async def get_watchlist(
     db: AsyncSession = Depends(get_db),
 ) -> list[WatchlistItem]:
     credentials = await _get_trakt_credentials(current_user, db)
-    try:
-        access_token = await trakt_client.get_valid_access_token(credentials, db)
-        raw_items = await trakt_client.get_watchlist(access_token)
-    except httpx.HTTPError:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail="Trakt no disponible"
-        )
+    access_token = await trakt_client.get_valid_access_token(credentials, db)
+    raw_items = await trakt_client.get_watchlist(access_token)
 
     return [
         WatchlistItem(**trakt_client.watchlist_item_from_trakt(item)) for item in raw_items
@@ -54,13 +48,8 @@ async def add_history(
     payload = trakt_client.build_history_payload(
         item.media_type, item.tmdb_id, item.season_number, item.episode_number
     )
-    try:
-        access_token = await trakt_client.get_valid_access_token(credentials, db)
-        await trakt_client.add_to_history(access_token, payload)
-    except httpx.HTTPError:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail="Trakt no disponible"
-        )
+    access_token = await trakt_client.get_valid_access_token(credentials, db)
+    await trakt_client.add_to_history(access_token, payload)
 
     return SyncActionResponse(status="added")
 
@@ -75,12 +64,7 @@ async def remove_history(
     payload = trakt_client.build_history_payload(
         item.media_type, item.tmdb_id, item.season_number, item.episode_number
     )
-    try:
-        access_token = await trakt_client.get_valid_access_token(credentials, db)
-        await trakt_client.remove_from_history(access_token, payload)
-    except httpx.HTTPError:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail="Trakt no disponible"
-        )
+    access_token = await trakt_client.get_valid_access_token(credentials, db)
+    await trakt_client.remove_from_history(access_token, payload)
 
     return SyncActionResponse(status="removed")

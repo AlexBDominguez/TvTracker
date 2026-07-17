@@ -199,7 +199,7 @@ Centralizar esto con un exception handler global de FastAPI (`core/exceptions.py
 4. **Fase 3 — Integración Trakt OAuth2** ✅ hecho
    `GET /auth/trakt/connect`, `GET /auth/trakt/callback`, guardado y refresco de tokens.
 
-5. **Fase 4 — Proxy TMDB**
+5. **Fase 4 — Proxy TMDB** ✅ hecho
    `GET /search`, `GET /shows/{id}`, con capa de caché en memoria.
 
 6. **Fase 5 — Sync con Trakt**

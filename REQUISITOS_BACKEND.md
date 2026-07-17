@@ -202,7 +202,7 @@ Centralizar esto con un exception handler global de FastAPI (`core/exceptions.py
 5. **Fase 4 — Proxy TMDB** ✅ hecho
    `GET /search`, `GET /shows/{id}`, con capa de caché en memoria.
 
-6. **Fase 5 — Sync con Trakt**
+6. **Fase 5 — Sync con Trakt** ✅ hecho
    `GET /sync/watchlist`, `POST /sync/history`, `DELETE /sync/history`.
 
 7. **Fase 6 — Endurecimiento**

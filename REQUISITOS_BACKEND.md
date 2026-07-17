@@ -205,7 +205,7 @@ Centralizar esto con un exception handler global de FastAPI (`core/exceptions.py
 6. **Fase 5 — Sync con Trakt** ✅ hecho
    `GET /sync/watchlist`, `POST /sync/history`, `DELETE /sync/history`.
 
-7. **Fase 6 — Endurecimiento**
+7. **Fase 6 — Endurecimiento** ✅ hecho
    Manejo uniforme de errores, CORS, logging, tests básicos de cada endpoint, revisión de que no haya secretos ni configuración hardcodeada.
 
 8. **Fase 7 `[FUTURO]`— Preparación de despliegue**

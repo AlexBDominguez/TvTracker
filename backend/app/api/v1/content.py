@@ -17,12 +17,7 @@ async def search(query: str, current_user: User = Depends(get_current_user)) -> 
     if cached is not None:
         return cached
 
-    try:
-        data = await tmdb_client.search(query)
-    except httpx.HTTPError:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail="TMDB no disponible"
-        )
+    data = await tmdb_client.search(query)
 
     results = [
         SearchResultItem(
@@ -55,13 +50,7 @@ async def get_show(tmdb_id: int, current_user: User = Depends(get_current_user))
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Show not found"
             )
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail="TMDB no disponible"
-        )
-    except httpx.HTTPError:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail="TMDB no disponible"
-        )
+        raise
 
     show = ShowDetail(
         tmdb_id=data["id"],

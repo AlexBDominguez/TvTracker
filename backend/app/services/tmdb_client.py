@@ -33,3 +33,23 @@ async def get_tv_details(tmdb_id: int) -> dict:
         )
         response.raise_for_status()
         return response.json()
+
+
+async def get_popular_tv() -> dict:
+    async with httpx.AsyncClient(base_url=settings.TMDB_BASE_URL, timeout=10) as client:
+        response = await client.get(
+            "/tv/popular",
+            params={"api_key": settings.TMDB_API_KEY},
+        )
+        response.raise_for_status()
+        return response.json()
+
+
+async def get_season_details(tmdb_id: int, season_number: int) -> dict:
+    async with httpx.AsyncClient(base_url=settings.TMDB_BASE_URL, timeout=10) as client:
+        response = await client.get(
+            f"/tv/{tmdb_id}/season/{season_number}",
+            params={"api_key": settings.TMDB_API_KEY},
+        )
+        response.raise_for_status()
+        return response.json()

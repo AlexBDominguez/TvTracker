@@ -19,16 +19,30 @@ class AuthRepository {
       );
       final token = response.data['access_token'];
       await _storage.write(key: 'auth_token', value: token);
-      
-      // Assuming the backend returns user info on a separate endpoint
-      final userResponse = await _dio.get(
-        '/users/me',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
-      
-      return User.fromJson(userResponse.data);
+      return await getMe();
     } catch (e) {
       await _storage.delete(key: 'auth_token');
+      rethrow;
+    }
+  }
+
+  Future<User> register(String name, String email, String password) async {
+    try {
+      await _dio.post(
+        '/auth/register',
+        data: {'name': name, 'email': email, 'password': password},
+      );
+      return await login(email, password);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<User> getMe() async {
+    try {
+      final response = await _dio.get('/users/me');
+      return User.fromJson(response.data);
+    } catch (e) {
       rethrow;
     }
   }

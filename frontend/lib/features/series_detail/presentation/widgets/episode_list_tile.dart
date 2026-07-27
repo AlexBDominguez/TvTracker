@@ -52,7 +52,7 @@ class EpisodeListTile extends ConsumerWidget {
           const SizedBox(width: 16),
           IconButton(
             icon: Icon(
-              isWatched ? Icons.check_circle_rounded : Icons.circle_outline,
+              isWatched ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
               color: isWatched ? AppColors.success : AppColors.textSecondary,
             ),
             onPressed: () {

@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_trakt_credentials
 from app.models.trakt_credentials import TraktCredentials
 from app.models.user import User
 from app.schemas.sync import HistoryItem, SyncActionResponse, WatchlistItem
@@ -12,24 +11,11 @@ from app.services import trakt_client
 router = APIRouter(prefix="/sync", tags=["sync"])
 
 
-async def _get_trakt_credentials(user: User, db: AsyncSession) -> TraktCredentials:
-    credentials = await db.scalar(
-        select(TraktCredentials).where(TraktCredentials.user_id == user.id)
-    )
-    if credentials is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Trakt account not connected",
-        )
-    return credentials
-
-
 @router.get("/watchlist", response_model=list[WatchlistItem])
 async def get_watchlist(
-    current_user: User = Depends(get_current_user),
+    credentials: TraktCredentials = Depends(get_trakt_credentials),
     db: AsyncSession = Depends(get_db),
 ) -> list[WatchlistItem]:
-    credentials = await _get_trakt_credentials(current_user, db)
     access_token = await trakt_client.get_valid_access_token(credentials, db)
     raw_items = await trakt_client.get_watchlist(access_token)
 
@@ -44,7 +30,9 @@ async def add_history(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SyncActionResponse:
-    credentials = await _get_trakt_credentials(current_user, db)
+    # Trakt-connection check happens after body validation on purpose, so an
+    # invalid payload still surfaces as 422 rather than being shadowed by 400.
+    credentials = await get_trakt_credentials(current_user, db)
     payload = trakt_client.build_history_payload(
         item.media_type, item.tmdb_id, item.season_number, item.episode_number
     )
@@ -60,7 +48,7 @@ async def remove_history(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SyncActionResponse:
-    credentials = await _get_trakt_credentials(current_user, db)
+    credentials = await get_trakt_credentials(current_user, db)
     payload = trakt_client.build_history_payload(
         item.media_type, item.tmdb_id, item.season_number, item.episode_number
     )

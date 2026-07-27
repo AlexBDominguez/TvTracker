@@ -140,6 +140,33 @@ def build_history_payload(
     }
 
 
+async def get_history(access_token: str, media_type: str = "episodes", limit: int = 1) -> list[dict]:
+    async with httpx.AsyncClient(base_url=settings.TRAKT_BASE_URL, timeout=10) as client:
+        response = await client.get(
+            f"/sync/history/{media_type}",
+            params={"limit": limit},
+            headers=_auth_headers(access_token),
+        )
+        response.raise_for_status()
+        return response.json()
+
+
+async def get_watched_shows(access_token: str) -> list[dict]:
+    """Every show the user has watched at least one episode of, with a
+    per-season/per-episode breakdown of what's been watched."""
+    async with httpx.AsyncClient(base_url=settings.TRAKT_BASE_URL, timeout=10) as client:
+        response = await client.get(
+            "/sync/watched/shows", headers=_auth_headers(access_token)
+        )
+        response.raise_for_status()
+        return response.json()
+
+
+def build_episode_history_payload(episode_tmdb_id: int) -> dict:
+    """Trakt accepts a bare TMDB episode id (no show/season/episode numbers needed)."""
+    return {"episodes": [{"ids": {"tmdb": episode_tmdb_id}}]}
+
+
 async def add_to_history(access_token: str, payload: dict) -> dict:
     async with httpx.AsyncClient(base_url=settings.TRAKT_BASE_URL, timeout=10) as client:
         response = await client.post(

@@ -5,6 +5,7 @@ part 'episode.g.dart';
 
 @freezed
 class Episode with _$Episode {
+  @JsonSerializable(fieldRename: FieldRename.snake)
   const factory Episode({
     required int id,
     required String name,
@@ -13,7 +14,7 @@ class Episode with _$Episode {
     required String? stillPath,
     required String overview,
     required DateTime? airDate,
-    int? seriesId, // Added seriesId
+    int? seriesId,
   }) = _Episode;
 
   factory Episode.fromJson(Map<String, dynamic> json) => _$EpisodeFromJson(json);

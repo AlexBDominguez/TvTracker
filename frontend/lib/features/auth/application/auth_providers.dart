@@ -47,9 +47,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> register(String name, String email, String password) async {
+  Future<void> register(String username, String email, String password) async {
     try {
-      final user = await _authRepository.register(name, email, password);
+      final user = await _authRepository.register(username, email, password);
       state = AuthState(status: AuthStatus.authenticated, user: user);
     } catch (e) {
       state = AuthState(status: AuthStatus.unauthenticated);

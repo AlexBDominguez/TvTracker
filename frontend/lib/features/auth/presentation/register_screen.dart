@@ -11,13 +11,13 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -25,7 +25,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _register() {
     ref.read(authStateProvider.notifier).register(
-          _nameController.text,
+          _usernameController.text,
           _emailController.text,
           _passwordController.text,
         );
@@ -52,9 +52,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             const SizedBox(height: 48),
             TextField(
-              controller: _nameController,
+              controller: _usernameController,
               decoration: InputDecoration(
-                labelText: 'Nombre',
+                labelText: 'Nombre de usuario',
                 filled: true,
                 fillColor: AppColors.surface,
                 border: OutlineInputBorder(

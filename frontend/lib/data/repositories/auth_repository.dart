@@ -26,11 +26,11 @@ class AuthRepository {
     }
   }
 
-  Future<User> register(String name, String email, String password) async {
+  Future<User> register(String username, String email, String password) async {
     try {
       await _dio.post(
         '/auth/register',
-        data: {'name': name, 'email': email, 'password': password},
+        data: {'username': username, 'email': email, 'password': password},
       );
       return await login(email, password);
     } catch (e) {

@@ -1,9 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-// Use 10.0.2.2 to connect to the host machine's localhost from the Android emulator
-const String baseUrl = 'http://10.0.2.2:8000/api/v1';
+// Web and desktop reach the host directly via localhost; the Android emulator
+// needs 10.0.2.2 to reach the host machine's localhost.
+final String baseUrl = kIsWeb
+    ? 'http://localhost:8000/api/v1'
+    : 'http://10.0.2.2:8000/api/v1';
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(

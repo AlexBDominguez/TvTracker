@@ -37,7 +37,11 @@ async def register(payload: UserRegister, db: AsyncSession = Depends(get_db)) ->
 
 @router.post("/login", response_model=Token)
 async def login(payload: UserLogin, db: AsyncSession = Depends(get_db)) -> Token:
-    user = await db.scalar(select(User).where(User.username == payload.username))
+    user = await db.scalar(
+        select(User).where(
+            (User.username == payload.username) | (User.email == payload.username)
+        )
+    )
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

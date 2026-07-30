@@ -15,7 +15,6 @@ class AuthRepository {
       final response = await _dio.post(
         '/auth/login',
         data: {'username': email, 'password': password},
-        options: Options(contentType: Headers.formUrlEncodedContentType),
       );
       final token = response.data['access_token'];
       await _storage.write(key: 'auth_token', value: token);

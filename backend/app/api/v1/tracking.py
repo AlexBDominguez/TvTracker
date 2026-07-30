@@ -2,36 +2,39 @@ import datetime as dt
 
 import httpx
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.dependencies import get_current_user, get_trakt_credentials
+from app.dependencies import get_current_user
 from app.models.series_tracking import SeriesStatus, SeriesTracking
-from app.models.trakt_credentials import TraktCredentials
 from app.models.user import User
+from app.models.watched_episode import WatchedEpisode
 from app.schemas.series import EpisodeOut
-from app.schemas.sync import SyncActionResponse
-from app.schemas.tracking import EpisodeRef
-from app.services import tmdb_client, trakt_client
+from app.schemas.tracking import EpisodeRef, SyncActionResponse
+from app.services import tmdb_client
 from app.services.cache import cache_get, cache_set
 
 router = APIRouter(prefix="/tracking", tags=["tracking"])
 
 
-def _watched_keys_from_trakt(watched_shows: list[dict]) -> dict[int, set[tuple[int, int]]]:
+async def _watched_keys_for_user(
+    db: AsyncSession, user_id: int
+) -> dict[int, set[tuple[int, int]]]:
     """tmdb show id -> set of (season_number, episode_number) already watched."""
+    rows = (
+        await db.execute(
+            select(
+                WatchedEpisode.series_tmdb_id,
+                WatchedEpisode.season_number,
+                WatchedEpisode.episode_number,
+            ).where(WatchedEpisode.user_id == user_id)
+        )
+    ).all()
+
     watched: dict[int, set[tuple[int, int]]] = {}
-    for entry in watched_shows:
-        tmdb_id = entry.get("show", {}).get("ids", {}).get("tmdb")
-        if tmdb_id is None:
-            continue
-        episodes = {
-            (season["number"], episode["number"])
-            for season in entry.get("seasons", [])
-            for episode in season.get("episodes", [])
-        }
-        watched[tmdb_id] = episodes
+    for series_tmdb_id, season_number, episode_number in rows:
+        watched.setdefault(series_tmdb_id, set()).add((season_number, episode_number))
     return watched
 
 
@@ -59,16 +62,55 @@ async def _cached_season(tmdb_id: int, season_number: int) -> dict | None:
     return data
 
 
+async def _episode_out_from_tmdb(
+    series_tmdb_id: int, season_number: int, episode_number: int
+) -> EpisodeOut | None:
+    season_data = await _cached_season(series_tmdb_id, season_number)
+    if season_data is None:
+        return None
+
+    for episode in season_data.get("episodes", []):
+        if episode.get("episode_number") != episode_number:
+            continue
+        air_date_str = episode.get("air_date")
+        return EpisodeOut(
+            id=episode["id"],
+            name=episode.get("name", ""),
+            season_number=season_number,
+            episode_number=episode_number,
+            still_path=episode.get("still_path"),
+            overview=episode.get("overview") or "",
+            air_date=dt.date.fromisoformat(air_date_str) if air_date_str else None,
+            series_id=series_tmdb_id,
+        )
+    return None
+
+
 @router.post("/watch", response_model=SyncActionResponse, status_code=201)
 async def mark_watched(
     payload: EpisodeRef,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SyncActionResponse:
-    credentials = await get_trakt_credentials(current_user, db)
-    access_token = await trakt_client.get_valid_access_token(credentials, db)
-    history_payload = trakt_client.build_episode_history_payload(payload.episode_id)
-    await trakt_client.add_to_history(access_token, history_payload)
+    existing = await db.scalar(
+        select(WatchedEpisode).where(
+            WatchedEpisode.user_id == current_user.id,
+            WatchedEpisode.series_tmdb_id == payload.series_id,
+            WatchedEpisode.season_number == payload.season_number,
+            WatchedEpisode.episode_number == payload.episode_number,
+        )
+    )
+    if existing is None:
+        db.add(
+            WatchedEpisode(
+                user_id=current_user.id,
+                series_tmdb_id=payload.series_id,
+                season_number=payload.season_number,
+                episode_number=payload.episode_number,
+                episode_tmdb_id=payload.episode_id,
+            )
+        )
+        await db.commit()
     return SyncActionResponse(status="added")
 
 
@@ -78,51 +120,43 @@ async def unmark_watched(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SyncActionResponse:
-    credentials = await get_trakt_credentials(current_user, db)
-    access_token = await trakt_client.get_valid_access_token(credentials, db)
-    history_payload = trakt_client.build_episode_history_payload(payload.episode_id)
-    await trakt_client.remove_from_history(access_token, history_payload)
+    await db.execute(
+        delete(WatchedEpisode).where(
+            WatchedEpisode.user_id == current_user.id,
+            WatchedEpisode.series_tmdb_id == payload.series_id,
+            WatchedEpisode.season_number == payload.season_number,
+            WatchedEpisode.episode_number == payload.episode_number,
+        )
+    )
+    await db.commit()
     return SyncActionResponse(status="removed")
 
 
 @router.get("/last-watched", response_model=EpisodeOut | None)
 async def last_watched(
-    credentials: TraktCredentials = Depends(get_trakt_credentials),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> EpisodeOut | None:
-    access_token = await trakt_client.get_valid_access_token(credentials, db)
-    history = await trakt_client.get_history(access_token, media_type="episodes", limit=1)
-    if not history:
+    entry = await db.scalar(
+        select(WatchedEpisode)
+        .where(WatchedEpisode.user_id == current_user.id)
+        .order_by(WatchedEpisode.watched_at.desc())
+        .limit(1)
+    )
+    if entry is None:
         return None
 
-    entry = history[0]
-    episode = entry.get("episode", {})
-    show = entry.get("show", {})
-    episode_tmdb_id = episode.get("ids", {}).get("tmdb")
-    if episode_tmdb_id is None:
-        return None
-
-    return EpisodeOut(
-        id=episode_tmdb_id,
-        name=episode.get("title") or "",
-        season_number=episode.get("season", 0),
-        episode_number=episode.get("number", 0),
-        still_path=None,
-        overview="",
-        air_date=None,
-        series_id=show.get("ids", {}).get("tmdb"),
+    return await _episode_out_from_tmdb(
+        entry.series_tmdb_id, entry.season_number, entry.episode_number
     )
 
 
 @router.get("/pending", response_model=list[EpisodeOut])
 async def pending_episodes(
     current_user: User = Depends(get_current_user),
-    credentials: TraktCredentials = Depends(get_trakt_credentials),
     db: AsyncSession = Depends(get_db),
 ) -> list[EpisodeOut]:
-    access_token = await trakt_client.get_valid_access_token(credentials, db)
-    watched_shows = await trakt_client.get_watched_shows(access_token)
-    watched_by_show = _watched_keys_from_trakt(watched_shows)
+    watched_by_show = await _watched_keys_for_user(db, current_user.id)
 
     trackings = (
         await db.scalars(

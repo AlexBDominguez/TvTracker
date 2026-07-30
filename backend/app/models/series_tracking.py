@@ -22,9 +22,8 @@ class SeriesStatus(str, enum.Enum):
 class SeriesTracking(Base):
     """Per-user status for a show, keyed by TMDB id.
 
-    Trakt only knows watchlist/watched-history, not the paused/dropped
-    distinction the frontend's library screen needs, so that piece of state
-    lives locally instead of being derived from Trakt.
+    Covers the watchlist too: `PLAN_TO_WATCH` is what "watchlist" means for a
+    show that hasn't been started yet.
     """
 
     __tablename__ = "series_tracking"

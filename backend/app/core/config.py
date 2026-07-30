@@ -22,22 +22,20 @@ class Settings(BaseSettings):
     TMDB_API_KEY: str = ""
     TMDB_BASE_URL: str = "https://api.themoviedb.org/3"
 
-    # Trakt
-    TRAKT_CLIENT_ID: str = ""
-    TRAKT_CLIENT_SECRET: str = ""
-    TRAKT_REDIRECT_URI: str = ""
-    TRAKT_BASE_URL: str = "https://api.trakt.tv"
-
-    # Token encryption at rest (Fernet key). Generate with:
-    # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-    TOKEN_ENCRYPTION_KEY: str
-
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:3000"
 
     @property
     def allowed_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+
+    @property
+    def cors_origin_regex(self) -> str | None:
+        # flutter run -d chrome picks a random port each time; in local dev we
+        # accept any localhost port instead of chasing it in ALLOWED_ORIGINS.
+        if self.ENVIRONMENT != "local":
+            return None
+        return r"^http://localhost:\d+$"
 
 
 @lru_cache

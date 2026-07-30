@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/data/models/episode.dart';
 import 'package:frontend/data/repositories/tracking_repository.dart';
 
 final watchedEpisodesProvider = StateNotifierProvider<WatchedEpisodesNotifier, Set<int>>((ref) {
@@ -12,12 +13,13 @@ class WatchedEpisodesNotifier extends StateNotifier<Set<int>> {
 
   WatchedEpisodesNotifier(this._trackingRepository, Set<int> initialWatched) : super(initialWatched);
 
-  Future<void> toggleWatched(BuildContext context, int episodeId) async {
+  Future<void> toggleWatched(BuildContext context, Episode episode) async {
+    final episodeId = episode.id;
     final isWatched = state.contains(episodeId);
     if (isWatched) {
       state = state.difference({episodeId});
       try {
-        await _trackingRepository.removeFromWatched(episodeId);
+        await _trackingRepository.removeFromWatched(episode);
       } catch (e) {
         state = state.union({episodeId});
         ScaffoldMessenger.of(context).showSnackBar(
@@ -27,7 +29,7 @@ class WatchedEpisodesNotifier extends StateNotifier<Set<int>> {
     } else {
       state = state.union({episodeId});
       try {
-        await _trackingRepository.markAsWatched(episodeId);
+        await _trackingRepository.markAsWatched(episode);
       } catch (e) {
         state = state.difference({episodeId});
         ScaffoldMessenger.of(context).showSnackBar(

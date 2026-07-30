@@ -18,19 +18,24 @@ Datos que TMDB ya expone; solo falta un endpoint que los sirva en el formato que
 - **Géneros** (accesos rápidos en Descubrir, filtro por género en Biblioteca): `GET /genre/tv/list`
   para el catálogo; el género de cada serie ya viene en el detalle de TMDB.
 
-## Ya hay integración con Trakt, falta el endpoint
+## Ya hay el dato guardado, falta el endpoint
 
-- **Actividad reciente** (Perfil): agregación sobre `/sync/history` de Trakt (ya integrado en
-  `trakt_client.get_history`), sin dato nuevo que guardar.
+Trakt ya no es parte de la arquitectura (ver nota en REQUISITOS_BACKEND.md §0) — todo lo de abajo
+se apoya en la tabla local `watched_episode` (`user_id`, `series_tmdb_id`, `season_number`,
+`episode_number`, `watched_at`), sin dependencia externa.
+
+- **Actividad reciente** (Perfil): agregación sobre `watched_episode` ordenada por `watched_at`,
+  sin dato nuevo que guardar.
 - **Racha de días** (Perfil, "18 días consecutivos viendo series"): se calcula recorriendo fechas
-  de `watched_at` en el historial de Trakt. Solo hace falta el endpoint que lo calcule.
-- **Resumen de estadísticas** (series vistas, episodios vistos, horas totales): episodios y series
-  vistas salen de Trakt; las horas requieren la duración de cada episodio (TMDB la da por
-  temporada, no siempre por episodio) — revisar precisión antes de mostrarla como dato exacto.
+  de `watched_at` en `watched_episode`. Solo hace falta el endpoint que lo calcule.
+- **Resumen de estadísticas** (series vistas, episodios vistos, horas totales): episodios vistos
+  sale de `watched_episode`; series vistas se deriva agrupando por `series_tmdb_id`; las horas
+  requieren la duración de cada episodio (TMDB la da por temporada, no siempre por episodio) —
+  revisar precisión antes de mostrarla como dato exacto.
 
 ## Requiere tabla(s) nuevas en MySQL
 
-Nada de esto lo modela Trakt ni TMDB; hay que diseñar el esquema y las migraciones.
+Nada de esto lo modela `watched_episode`/`series_tracking` ni TMDB; hay que diseñar el esquema y las migraciones.
 
 - **Notas y valoraciones por episodio** (ficha de serie, al marcar un episodio): tabla
   `episode_review` (user_id, tmdb_episode_id, rating, nota, fecha).
@@ -44,8 +49,8 @@ Nada de esto lo modela Trakt ni TMDB; hay que diseñar el esquema y las migracio
   progreso por usuario, y disparar la comprobación en `/tracking/watch`. Es el bloque más grande
   de este documento.
 - **Gráficos de estadísticas** (distribución por géneros, episodios vistos por mes, evolución
-  anual, días de mayor actividad): una vez estén las tablas de arriba (o combinando Trakt +
-  TMDB), son endpoints de agregación sobre esos datos. Depende de tener "plataforma" para el
+  anual, días de mayor actividad): una vez estén las tablas de arriba (o combinando
+  `watched_episode` + TMDB), son endpoints de agregación sobre esos datos. Depende de tener "plataforma" para el
   gráfico de "tiempo por plataforma".
 - **Avatar de usuario** (Perfil): subida/almacenamiento de imagen. Si no hay VPS/S3 todavía, se
   puede dejar como URL externa (ej. Gravatar) para no depender de almacenamiento propio.

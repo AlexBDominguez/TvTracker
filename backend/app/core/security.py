@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from jose import JWTError, jwt
+from jose import jwt
 from passlib.context import CryptContext
 
 from app.core.config import get_settings
@@ -8,9 +8,6 @@ from app.core.config import get_settings
 settings = get_settings()
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
-
-TRAKT_STATE_TOKEN_MINUTES = 10
-_TRAKT_STATE_PURPOSE = "trakt_state"
 
 
 def hash_password(password: str) -> str:
@@ -31,19 +28,4 @@ def create_access_token(subject: str) -> str:
 
 def decode_access_token(token: str) -> str:
     payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-    return payload["sub"]
-
-
-def create_trakt_state_token(user_id: str) -> str:
-    """Short-lived signed token carrying the user id through the Trakt OAuth2 redirect,
-    since the callback request comes from the browser without our JWT header."""
-    expire = datetime.now(timezone.utc) + timedelta(minutes=TRAKT_STATE_TOKEN_MINUTES)
-    to_encode = {"sub": user_id, "exp": expire, "purpose": _TRAKT_STATE_PURPOSE}
-    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
-
-
-def decode_trakt_state_token(token: str) -> str:
-    payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-    if payload.get("purpose") != _TRAKT_STATE_PURPOSE:
-        raise JWTError("Invalid state token purpose")
     return payload["sub"]

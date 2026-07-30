@@ -1,5 +1,5 @@
 from app.models.series_tracking import SeriesTracking, SeriesStatus
-from app.models.trakt_credentials import TraktCredentials
 from app.models.user import User
+from app.models.watched_episode import WatchedEpisode
 
-__all__ = ["User", "TraktCredentials", "SeriesTracking", "SeriesStatus"]
+__all__ = ["User", "SeriesTracking", "SeriesStatus", "WatchedEpisode"]

@@ -12,8 +12,7 @@ part of 'episode.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 Episode _$EpisodeFromJson(Map<String, dynamic> json) {
   return _Episode.fromJson(json);
@@ -44,16 +43,15 @@ abstract class $EpisodeCopyWith<$Res> {
   factory $EpisodeCopyWith(Episode value, $Res Function(Episode) then) =
       _$EpisodeCopyWithImpl<$Res, Episode>;
   @useResult
-  $Res call({
-    int id,
-    String name,
-    int seasonNumber,
-    int episodeNumber,
-    String? stillPath,
-    String overview,
-    DateTime? airDate,
-    int? seriesId,
-  });
+  $Res call(
+      {int id,
+      String name,
+      int seasonNumber,
+      int episodeNumber,
+      String? stillPath,
+      String overview,
+      DateTime? airDate,
+      int? seriesId});
 }
 
 /// @nodoc
@@ -80,64 +78,59 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
     Object? airDate = freezed,
     Object? seriesId = freezed,
   }) {
-    return _then(
-      _value.copyWith(
-            id: null == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
-                      as int,
-            name: null == name
-                ? _value.name
-                : name // ignore: cast_nullable_to_non_nullable
-                      as String,
-            seasonNumber: null == seasonNumber
-                ? _value.seasonNumber
-                : seasonNumber // ignore: cast_nullable_to_non_nullable
-                      as int,
-            episodeNumber: null == episodeNumber
-                ? _value.episodeNumber
-                : episodeNumber // ignore: cast_nullable_to_non_nullable
-                      as int,
-            stillPath: freezed == stillPath
-                ? _value.stillPath
-                : stillPath // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            overview: null == overview
-                ? _value.overview
-                : overview // ignore: cast_nullable_to_non_nullable
-                      as String,
-            airDate: freezed == airDate
-                ? _value.airDate
-                : airDate // ignore: cast_nullable_to_non_nullable
-                      as DateTime?,
-            seriesId: freezed == seriesId
-                ? _value.seriesId
-                : seriesId // ignore: cast_nullable_to_non_nullable
-                      as int?,
-          )
-          as $Val,
-    );
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
+      seasonNumber: null == seasonNumber
+          ? _value.seasonNumber
+          : seasonNumber // ignore: cast_nullable_to_non_nullable
+              as int,
+      episodeNumber: null == episodeNumber
+          ? _value.episodeNumber
+          : episodeNumber // ignore: cast_nullable_to_non_nullable
+              as int,
+      stillPath: freezed == stillPath
+          ? _value.stillPath
+          : stillPath // ignore: cast_nullable_to_non_nullable
+              as String?,
+      overview: null == overview
+          ? _value.overview
+          : overview // ignore: cast_nullable_to_non_nullable
+              as String,
+      airDate: freezed == airDate
+          ? _value.airDate
+          : airDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      seriesId: freezed == seriesId
+          ? _value.seriesId
+          : seriesId // ignore: cast_nullable_to_non_nullable
+              as int?,
+    ) as $Val);
   }
 }
 
 /// @nodoc
 abstract class _$$EpisodeImplCopyWith<$Res> implements $EpisodeCopyWith<$Res> {
   factory _$$EpisodeImplCopyWith(
-    _$EpisodeImpl value,
-    $Res Function(_$EpisodeImpl) then,
-  ) = __$$EpisodeImplCopyWithImpl<$Res>;
+          _$EpisodeImpl value, $Res Function(_$EpisodeImpl) then) =
+      __$$EpisodeImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({
-    int id,
-    String name,
-    int seasonNumber,
-    int episodeNumber,
-    String? stillPath,
-    String overview,
-    DateTime? airDate,
-    int? seriesId,
-  });
+  $Res call(
+      {int id,
+      String name,
+      int seasonNumber,
+      int episodeNumber,
+      String? stillPath,
+      String overview,
+      DateTime? airDate,
+      int? seriesId});
 }
 
 /// @nodoc
@@ -145,9 +138,8 @@ class __$$EpisodeImplCopyWithImpl<$Res>
     extends _$EpisodeCopyWithImpl<$Res, _$EpisodeImpl>
     implements _$$EpisodeImplCopyWith<$Res> {
   __$$EpisodeImplCopyWithImpl(
-    _$EpisodeImpl _value,
-    $Res Function(_$EpisodeImpl) _then,
-  ) : super(_value, _then);
+      _$EpisodeImpl _value, $Res Function(_$EpisodeImpl) _then)
+      : super(_value, _then);
 
   /// Create a copy of Episode
   /// with the given fields replaced by the non-null parameter values.
@@ -163,58 +155,55 @@ class __$$EpisodeImplCopyWithImpl<$Res>
     Object? airDate = freezed,
     Object? seriesId = freezed,
   }) {
-    return _then(
-      _$EpisodeImpl(
-        id: null == id
-            ? _value.id
-            : id // ignore: cast_nullable_to_non_nullable
-                  as int,
-        name: null == name
-            ? _value.name
-            : name // ignore: cast_nullable_to_non_nullable
-                  as String,
-        seasonNumber: null == seasonNumber
-            ? _value.seasonNumber
-            : seasonNumber // ignore: cast_nullable_to_non_nullable
-                  as int,
-        episodeNumber: null == episodeNumber
-            ? _value.episodeNumber
-            : episodeNumber // ignore: cast_nullable_to_non_nullable
-                  as int,
-        stillPath: freezed == stillPath
-            ? _value.stillPath
-            : stillPath // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        overview: null == overview
-            ? _value.overview
-            : overview // ignore: cast_nullable_to_non_nullable
-                  as String,
-        airDate: freezed == airDate
-            ? _value.airDate
-            : airDate // ignore: cast_nullable_to_non_nullable
-                  as DateTime?,
-        seriesId: freezed == seriesId
-            ? _value.seriesId
-            : seriesId // ignore: cast_nullable_to_non_nullable
-                  as int?,
-      ),
-    );
+    return _then(_$EpisodeImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
+      seasonNumber: null == seasonNumber
+          ? _value.seasonNumber
+          : seasonNumber // ignore: cast_nullable_to_non_nullable
+              as int,
+      episodeNumber: null == episodeNumber
+          ? _value.episodeNumber
+          : episodeNumber // ignore: cast_nullable_to_non_nullable
+              as int,
+      stillPath: freezed == stillPath
+          ? _value.stillPath
+          : stillPath // ignore: cast_nullable_to_non_nullable
+              as String?,
+      overview: null == overview
+          ? _value.overview
+          : overview // ignore: cast_nullable_to_non_nullable
+              as String,
+      airDate: freezed == airDate
+          ? _value.airDate
+          : airDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      seriesId: freezed == seriesId
+          ? _value.seriesId
+          : seriesId // ignore: cast_nullable_to_non_nullable
+              as int?,
+    ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$EpisodeImpl implements _Episode {
-  const _$EpisodeImpl({
-    required this.id,
-    required this.name,
-    required this.seasonNumber,
-    required this.episodeNumber,
-    required this.stillPath,
-    required this.overview,
-    required this.airDate,
-    this.seriesId,
-  });
+  const _$EpisodeImpl(
+      {required this.id,
+      required this.name,
+      required this.seasonNumber,
+      required this.episodeNumber,
+      required this.stillPath,
+      required this.overview,
+      required this.airDate,
+      this.seriesId});
 
   factory _$EpisodeImpl.fromJson(Map<String, dynamic> json) =>
       _$$EpisodeImplFromJson(json);
@@ -263,17 +252,8 @@ class _$EpisodeImpl implements _Episode {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    id,
-    name,
-    seasonNumber,
-    episodeNumber,
-    stillPath,
-    overview,
-    airDate,
-    seriesId,
-  );
+  int get hashCode => Object.hash(runtimeType, id, name, seasonNumber,
+      episodeNumber, stillPath, overview, airDate, seriesId);
 
   /// Create a copy of Episode
   /// with the given fields replaced by the non-null parameter values.
@@ -285,21 +265,22 @@ class _$EpisodeImpl implements _Episode {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$EpisodeImplToJson(this);
+    return _$$EpisodeImplToJson(
+      this,
+    );
   }
 }
 
 abstract class _Episode implements Episode {
-  const factory _Episode({
-    required final int id,
-    required final String name,
-    required final int seasonNumber,
-    required final int episodeNumber,
-    required final String? stillPath,
-    required final String overview,
-    required final DateTime? airDate,
-    final int? seriesId,
-  }) = _$EpisodeImpl;
+  const factory _Episode(
+      {required final int id,
+      required final String name,
+      required final int seasonNumber,
+      required final int episodeNumber,
+      required final String? stillPath,
+      required final String overview,
+      required final DateTime? airDate,
+      final int? seriesId}) = _$EpisodeImpl;
 
   factory _Episode.fromJson(Map<String, dynamic> json) = _$EpisodeImpl.fromJson;
 

@@ -7,15 +7,15 @@ part of 'series.dart';
 // **************************************************************************
 
 _$SeriesImpl _$$SeriesImplFromJson(Map<String, dynamic> json) => _$SeriesImpl(
-  id: (json['id'] as num).toInt(),
-  name: json['name'] as String,
-  posterPath: json['posterPath'] as String?,
-  backdropPath: json['backdropPath'] as String?,
-  overview: json['overview'] as String,
-  voteAverage: (json['voteAverage'] as num).toDouble(),
-  numberOfSeasons: (json['numberOfSeasons'] as num).toInt(),
-  status: $enumDecodeNullable(_$SeriesStatusEnumMap, json['status']),
-);
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      posterPath: json['posterPath'] as String?,
+      backdropPath: json['backdropPath'] as String?,
+      overview: json['overview'] as String,
+      voteAverage: (json['voteAverage'] as num).toDouble(),
+      numberOfSeasons: (json['numberOfSeasons'] as num).toInt(),
+      status: $enumDecodeNullable(_$SeriesStatusEnumMap, json['status']),
+    );
 
 Map<String, dynamic> _$$SeriesImplToJson(_$SeriesImpl instance) =>
     <String, dynamic>{

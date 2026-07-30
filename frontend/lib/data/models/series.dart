@@ -18,7 +18,6 @@ enum SeriesStatus {
 
 @freezed
 class Series with _$Series {
-  @JsonSerializable(fieldRename: FieldRename.snake)
   const factory Series({
     required int id,
     required String name,

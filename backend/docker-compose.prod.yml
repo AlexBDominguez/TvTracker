@@ -1,0 +1,14 @@
+# Override de producción para el VPS.
+# Uso: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Diferencias frente a docker-compose.yml (pensado para local):
+# - MySQL no publica el puerto 3306 al host (solo accesible en la red interna de docker-compose).
+# - Backend corre sin --reload y sin bind mounts del código (usa la imagen construida).
+
+services:
+  mysql:
+    ports: !reset []
+
+  backend:
+    volumes: !reset []
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -11,8 +11,8 @@ from app.core.config import get_settings
 from app.db.base import Base
 from app.models import (  # noqa: F401 (registers tables on Base.metadata)
     SeriesTracking,
-    TraktCredentials,
     User,
+    WatchedEpisode,
 )
 
 # this is the Alembic Config object, which provides

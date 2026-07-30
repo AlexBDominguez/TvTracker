@@ -10,17 +10,25 @@
 - **Reparto de trabajo:**
   - Backend (este documento) → yo, en Python.
   - Frontend → una compañera, en Flutter (móvil/web). Consume esta API vía REST/JSON.
-- **Rol del backend:** API Gateway / orquestador entre el frontend, una base de datos MySQL y dos APIs externas:
-  - **Trakt.tv** → estado de tracking (visto/pendiente, historial, watchlist).
+- **Rol del backend:** API Gateway / orquestador entre el frontend, una base de datos MySQL y una
+  API externa:
   - **TMDB** → metadatos e imágenes (pósters, sinopsis, temporadas, episodios).
+  - El estado de tracking por usuario (visto/pendiente, historial, watchlist) vive **100% en la
+    MySQL local** — no depende de ningún servicio externo. (Ver nota de arquitectura más abajo.)
 
 ```
-[Frontend Flutter] <---> [Backend API Python] <---> [MySQL local]
-                                 |
-                                 +---> [Trakt.tv API]  (estado de usuario)
+[Frontend Flutter] <---> [Backend API Python] <---> [MySQL local]  (tracking por usuario)
                                  |
                                  +---> [TMDB API]      (metadatos/imágenes)
 ```
+
+> **Nota de arquitectura (revisión posterior):** el diseño original de este documento delegaba el
+> tracking por usuario en Trakt.tv vía OAuth2 (ver antigua sección 4.2, ya eliminada). Al probar
+> el flujo real se detectó que el frontend Flutter nunca implementó pantalla ni lógica para
+> conectar una cuenta Trakt, así que cualquier usuario nuevo quedaba bloqueado permanentemente. Se
+> decidió que los usuarios finales solo tienen cuenta en esta app, nunca en Trakt, y se migró todo
+> el tracking a tablas locales (`watched_episode`, y `series_tracking` reutilizada para la
+> watchlist). TMDB sigue siendo la única fuente externa, y solo para metadatos.
 
 ### Filosofía de esta fase (Fase 1 — Local)
 
@@ -34,12 +42,12 @@
 
 | Capa | Elección | Motivo |
 |---|---|---|
-| Lenguaje/Framework | **Python + FastAPI** | Async nativo, ideal para llamadas concurrentes a Trakt/TMDB, generación automática de OpenAPI/Swagger (facilita el trabajo de tu compañera de frontend). |
+| Lenguaje/Framework | **Python + FastAPI** | Async nativo, ideal para llamadas concurrentes a TMDB, generación automática de OpenAPI/Swagger (facilita el trabajo de tu compañera de frontend). |
 | ORM | **SQLAlchemy 2.0 (async) + Alembic** | Migraciones versionadas del esquema desde el día 1. |
 | Base de datos | **MySQL 8** (contenedor Docker local en esta fase) | Pedido explícito; mismo motor que se usará en el VPS más adelante. |
 | Validación | **Pydantic v2** | Ya viene con FastAPI, define contratos de entrada/salida claros para el frontend. |
-| Autenticación | **JWT** (`python-jose` o `pyjwt`) + `passlib[bcrypt]` o `argon2-cffi` | Login local propio, independiente de Trakt. |
-| Cliente HTTP externo | **httpx (async)** | Para llamar a Trakt y TMDB sin bloquear el event loop. |
+| Autenticación | **JWT** (`python-jose` o `pyjwt`) + `passlib[bcrypt]` o `argon2-cffi` | Login 100% local, independiente de cualquier proveedor externo. |
+| Cliente HTTP externo | **httpx (async)** | Para llamar a TMDB sin bloquear el event loop. |
 | Cache | **`cachetools` en memoria** para Fase 1 (opcional migrar a Redis en `[FUTURO]`) | Evitar quemar el rate limit de TMDB. |
 | Contenedor | **Docker + docker-compose** (solo local en esta fase) | Un `docker-compose.yml` de desarrollo con dos servicios: `backend` y `mysql`. |
 
@@ -62,20 +70,20 @@ backend/
 │   │   └── base.py              # Base declarativa
 │   ├── models/
 │   │   ├── user.py              # tabla users
-│   │   └── trakt_credentials.py # tabla trakt_credentials
+│   │   ├── series_tracking.py   # tabla series_tracking (estado por serie, incl. watchlist)
+│   │   └── watched_episode.py   # tabla watched_episode (episodios vistos)
 │   ├── schemas/                 # DTOs Pydantic (request/response)
 │   │   ├── auth.py
-│   │   ├── trakt.py
+│   │   ├── tracking.py
 │   │   └── content.py
 │   ├── api/
 │   │   └── v1/
 │   │       ├── auth.py          # /auth/register, /auth/login
-│   │       ├── trakt_auth.py    # /auth/trakt/connect, /auth/trakt/callback
 │   │       ├── content.py       # /search, /shows/{id}
-│   │       └── sync.py          # /sync/watchlist, /sync/history
+│   │       ├── library.py       # /library/my-series, watchlist incluida
+│   │       └── tracking.py      # /tracking/watch, /unwatch, /pending, /last-watched
 │   ├── services/
 │   │   ├── tmdb_client.py       # wrapper httpx sobre TMDB
-│   │   ├── trakt_client.py      # wrapper httpx sobre Trakt (incl. refresh token)
 │   │   └── cache.py             # cache en memoria con TTL
 │   └── dependencies.py          # get_db, get_current_user, etc.
 ├── alembic/                     # migraciones
@@ -91,7 +99,8 @@ backend/
 
 ## 3. Modelo de datos (MySQL)
 
-Esquema mínimo para Fase 1. El tracking real (visto/pendiente) se delega en Trakt; aquí solo guardamos identidad local y credenciales.
+El tracking por usuario (visto/pendiente/historial/watchlist) vive entero en estas tablas locales
+— no hay credenciales ni estado de ningún servicio externo que persistir.
 
 ### `users`
 | Campo | Tipo | Notas |
@@ -102,16 +111,35 @@ Esquema mínimo para Fase 1. El tracking real (visto/pendiente) se delega en Tra
 | `password_hash` | VARCHAR(255), NOT NULL | bcrypt/argon2, nunca texto plano |
 | `created_at` | TIMESTAMP, DEFAULT CURRENT_TIMESTAMP | |
 
-### `trakt_credentials`
+### `series_tracking`
+Estado por serie y usuario: viendo/pendiente/finalizada/en pausa/abandonada. `PLAN_TO_WATCH` es,
+además, la watchlist (no hay tabla de watchlist aparte).
+
 | Campo | Tipo | Notas |
 |---|---|---|
 | `id` | INT, PK, AUTO_INCREMENT | |
-| `user_id` | INT, FK → `users.id`, UNIQUE, NOT NULL | 1:1 con el usuario |
-| `access_token` | VARCHAR(255), NOT NULL | **cifrado en reposo si es posible** (ver 6.3) |
-| `refresh_token` | VARCHAR(255), NOT NULL | |
-| `expires_at` | TIMESTAMP, NOT NULL | Trakt caduca tokens ~cada 3 meses; usar para disparar refresh automático |
+| `user_id` | INT, FK → `users.id`, NOT NULL | |
+| `tmdb_id` | INT, NOT NULL | id de la serie en TMDB |
+| `status` | ENUM (`watching`, `planToWatch`, `completed`, `paused`, `dropped`) | |
+| `created_at` / `updated_at` | TIMESTAMP | |
 
-> Implementar con Alembic desde el primer commit: `alembic init`, primera migración con estas dos tablas.
+`UNIQUE(user_id, tmdb_id)`.
+
+### `watched_episode`
+Un episodio marcado como visto por un usuario. "Último visto" = fila con `watched_at` más
+reciente; "historial" (si hiciera falta) es esta tabla ordenada por `watched_at`.
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `id` | INT, PK, AUTO_INCREMENT | |
+| `user_id` | INT, FK → `users.id`, NOT NULL | |
+| `series_tmdb_id` | INT, NOT NULL | id de la serie en TMDB |
+| `season_number` | INT, NOT NULL | |
+| `episode_number` | INT, NOT NULL | |
+| `episode_tmdb_id` | INT, NOT NULL | id del episodio en TMDB |
+| `watched_at` | DATETIME, DEFAULT CURRENT_TIMESTAMP | |
+
+`UNIQUE(user_id, series_tmdb_id, season_number, episode_number)`.
 
 ---
 
@@ -125,32 +153,29 @@ Todas las respuestas en JSON. Documentar cada endpoint con Pydantic para que sal
 | POST | `/auth/register` | Crea usuario (username, email, password). Hashea password. |
 | POST | `/auth/login` | Verifica credenciales, devuelve JWT (access token) para el frontend. |
 
-### 4.2 Integración Trakt (OAuth2)
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/auth/trakt/connect` | Devuelve al frontend la URL de autorización de Trakt (con `client_id`, `redirect_uri`, `state`). |
-| GET | `/auth/trakt/callback` | Recibe `code` de Trakt, lo intercambia por `access_token`/`refresh_token`, los guarda en `trakt_credentials` asociados al usuario autenticado. |
-
 ### 4.3 Contenido (proxy TMDB)
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/search?query=...` | Busca series/películas en TMDB, devuelve lista unificada y simplificada. |
 | GET | `/shows/{id}` | Detalle de una serie: temporadas, episodios, sinopsis, imágenes (TMDB). |
 
-### 4.4 Tracking (proxy Trakt)
+### 4.4 Tracking (local)
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/sync/watchlist` | Trae del Trakt del usuario lo pendiente de ver ("Up Next" / calendario). |
-| POST | `/sync/history` | Marca episodio/película como visto (recupera token de MySQL, llama a Trakt). |
-| DELETE | `/sync/history` | Desmarca un episodio/película (borra del historial en Trakt). |
+| POST | `/tracking/watch` | Marca un episodio como visto (upsert en `watched_episode`, idempotente). |
+| POST | `/tracking/unwatch` | Desmarca un episodio (borra la fila de `watched_episode`). |
+| GET | `/tracking/pending` | Episodios ya emitidos y no vistos de las series en estado `watching`. |
+| GET | `/tracking/last-watched` | Último episodio visto por el usuario (o `null`). |
+| GET | `/library/my-series` | Series del usuario con su `status`; filtrando por `planToWatch` es la watchlist. |
+| PUT | `/library/series/{tmdb_id}/status` | Cambia el `status` de una serie para el usuario. |
 
-Todos los endpoints de 4.2, 4.3 y 4.4 requieren JWT válido (usuario logueado), salvo el propio `/auth/login` y `/auth/register`.
+Todos los endpoints de 4.3 y 4.4 requieren JWT válido (usuario logueado), salvo el propio `/auth/login` y `/auth/register`.
 
 ---
 
 ## 5. Gestión de secretos
 
-- Nunca hardcodear: `TMDB_API_KEY`, `TRAKT_CLIENT_ID`, `TRAKT_CLIENT_SECRET`, `TRAKT_REDIRECT_URI`, `JWT_SECRET_KEY`, `DATABASE_URL`.
+- Nunca hardcodear: `TMDB_API_KEY`, `JWT_SECRET_KEY`, `DATABASE_URL`.
 - Todas se leen vía `pydantic-settings` desde variables de entorno.
 - En local: fichero `.env` (añadido a `.gitignore`) + `.env.example` con las claves vacías/documentadas, versionado en el repo.
 - `[FUTURO]` En VPS: las mismas variables se inyectan vía el `docker-compose.yml` de producción (no se toca el código, solo el método de inyección).
@@ -160,7 +185,7 @@ Todos los endpoints de 4.2, 4.3 y 4.4 requieren JWT válido (usuario logueado), 
 ## 6. Requisitos no funcionales
 
 ### 6.1 Manejo de errores uniforme
-Cualquier fallo (Trakt caído, TMDB caído, rate limit, timeout) debe capturarse y devolver siempre el mismo formato, por ejemplo:
+Cualquier fallo (TMDB caído, rate limit, timeout) debe capturarse y devolver siempre el mismo formato, por ejemplo:
 ```json
 { "error": "Servicio externo no disponible", "code": 503 }
 ```
@@ -170,14 +195,10 @@ Centralizar esto con un exception handler global de FastAPI (`core/exceptions.py
 - Cachear en memoria (TTL 24h) las respuestas de `/shows/{id}` y `/search`, ya que el metadato de una serie antigua no cambia.
 - Empezar simple (`cachetools.TTLCache`); dejar la interfaz desacoplada para poder cambiar a Redis en `[FUTURO]` sin tocar los endpoints.
 
-### 6.3 Seguridad de tokens Trakt
-- Considerar cifrar `access_token`/`refresh_token` en la base de datos (p. ej. con `cryptography.Fernet` y una clave en variable de entorno) en vez de guardarlos en texto plano, ya que dan acceso a la cuenta Trakt del usuario.
-- Implementar lógica de refresco automático: si `expires_at` está próximo/pasado, refrescar el token contra Trakt antes de usarlo.
-
-### 6.4 CORS
+### 6.3 CORS
 - Configurar CORS en FastAPI para permitir peticiones desde el entorno de desarrollo de Flutter (web) y desde la app móvil. Dejarlo parametrizado por variable de entorno (`ALLOWED_ORIGINS`), no hardcodeado.
 
-### 6.5 `[FUTURO]` Despliegue en VPS
+### 6.4 `[FUTURO]` Despliegue en VPS
 - No implementar ahora. Solo tener en cuenta que:
   - El `Dockerfile` del backend debe funcionar igual en local que integrado en el `docker-compose` del VPS.
   - La base de datos pasará de "contenedor MySQL local" a "base de datos `tvtime_clone` dentro del MySQL ya existente en el VPS" — por eso `DATABASE_URL` debe ser 100% configurable por entorno.
@@ -191,30 +212,39 @@ Centralizar esto con un exception handler global de FastAPI (`core/exceptions.py
    Estructura de carpetas, `pyproject.toml`/`requirements.txt`, `main.py` mínimo con FastAPI arrancando, `docker-compose.yml` local con `mysql` + `backend`, `.env.example`, README con instrucciones de arranque.
 
 2. **Fase 1 — Modelo de datos y migraciones** ✅ hecho
-   Modelos SQLAlchemy `User` y `TraktCredentials`, configuración de Alembic, primera migración aplicada contra el MySQL local.
+   Modelos SQLAlchemy `User` y (originalmente) `TraktCredentials`, configuración de Alembic, primera migración aplicada contra el MySQL local.
 
 3. **Fase 2 — Autenticación local** ✅ hecho
    `POST /auth/register`, `POST /auth/login`, hashing de contraseñas, emisión y verificación de JWT, dependencia `get_current_user`.
 
-4. **Fase 3 — Integración Trakt OAuth2** ✅ hecho
-   `GET /auth/trakt/connect`, `GET /auth/trakt/callback`, guardado y refresco de tokens.
+4. ~~**Fase 3 — Integración Trakt OAuth2**~~ ❌ revertida
+   Se implementó (`GET /auth/trakt/connect`, `GET /auth/trakt/callback`, guardado y refresco de
+   tokens) pero se eliminó por completo: el frontend nunca llegó a construir la pantalla de
+   conexión, así que ningún usuario podía completar el flujo. Ver la nota de arquitectura en la
+   sección 0.
 
 5. **Fase 4 — Proxy TMDB** ✅ hecho
    `GET /search`, `GET /shows/{id}`, con capa de caché en memoria.
 
-6. **Fase 5 — Sync con Trakt** ✅ hecho
-   `GET /sync/watchlist`, `POST /sync/history`, `DELETE /sync/history`.
+6. ~~**Fase 5 — Sync con Trakt**~~ ❌ revertida
+   `GET /sync/watchlist`, `POST /sync/history`, `DELETE /sync/history` proxeaban a Trakt; se
+   eliminaron junto con la Fase 3 (sin consumidor en el frontend).
 
 7. **Fase 6 — Endurecimiento** ✅ hecho
    Manejo uniforme de errores, CORS, logging, tests básicos de cada endpoint, revisión de que no haya secretos ni configuración hardcodeada.
 
-8. **Fase 7 `[FUTURO]`— Preparación de despliegue**
+8. **Fase 7 — Tracking 100% local** ✅ hecho
+   Se sustituyó Trakt por tablas propias: `watched_episode` (episodios vistos) y `series_tracking`
+   reutilizada para la watchlist (`status == planToWatch`). `POST/GET /tracking/*` reescritos
+   sobre estas tablas; `EpisodeRef` ampliado con `series_id`/`season_number`/`episode_number`
+   (TMDB no resuelve un episodio solo por id, a diferencia de Trakt).
+
+9. **Fase 8 `[FUTURO]`— Preparación de despliegue**
    Ajustes finales de `Dockerfile`/`docker-compose` para integrarse en el VPS existente. No se aborda hasta que el resto esté validado en local.
 
 ---
 
 ## 8. Referencias externas necesarias
 
-- Trakt API docs (OAuth2 device/web flow, endpoints de history/watchlist): https://trakt.docs.apiary.io/
 - TMDB API docs: https://developer.themoviedb.org/docs
-- Habrá que registrar la app en ambas plataformas para obtener `client_id`/`client_secret` (Trakt) y `API key` (TMDB) antes de empezar la Fase 3/4.
+- Habrá que registrar la app en TMDB para obtener una `API key` antes de empezar la fase de proxy TMDB.

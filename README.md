@@ -5,16 +5,14 @@ Clon simplificado de [TvTime](https://www.tvtime.com/): tracking de series y pel
 ## Arquitectura
 
 ```
-[Frontend Flutter] <---> [Backend API Python] <---> [MySQL]
-                                 |
-                                 +---> [Trakt.tv API]  (estado de usuario)
+[Frontend Flutter] <---> [Backend API Python] <---> [MySQL]  (tracking por usuario)
                                  |
                                  +---> [TMDB API]      (metadatos/imágenes)
 ```
 
-- **Backend** (`backend/`): API en Python/FastAPI, actúa como gateway entre el cliente, MySQL y las APIs
-  de Trakt.tv (tracking) y TMDB (metadatos e imágenes). Ver [backend/README.md](./backend/README.md)
-  para arrancarlo en local.
+- **Backend** (`backend/`): API en Python/FastAPI, actúa como gateway entre el cliente, MySQL
+  (que guarda todo el tracking por usuario) y la API de TMDB (metadatos e imágenes). Ver
+  [backend/README.md](./backend/README.md) para arrancarlo en local.
 - **Frontend** (`frontend/`): app Flutter (móvil/web). Tema oscuro con navegación inferior de 5
   secciones: Inicio, Biblioteca, Descubrir, Estadísticas y Perfil.
 
@@ -23,11 +21,10 @@ Clon simplificado de [TvTime](https://www.tvtime.com/): tracking de series y pel
 ### Backend
 
 - ✅ Autenticación local (registro/login con JWT)
-- ✅ Integración OAuth2 con Trakt.tv (tokens cifrados en reposo, refresco automático)
 - ✅ Proxy/caché de contenido vía TMDB (búsqueda, series populares, detalle, temporadas)
-- ✅ Sincronización de watchlist/historial con Trakt
-- ✅ Seguimiento por usuario: episodios pendientes, último episodio visto, y estado de cada serie
-  en la biblioteca (viendo / pendiente / finalizada / en pausa / abandonada)
+- ✅ Tracking 100% local (sin dependencia de Trakt ni ningún otro servicio externo): episodios
+  vistos/pendientes, último episodio visto, watchlist y estado de cada serie en la biblioteca
+  (viendo / pendiente / finalizada / en pausa / abandonada)
 - ✅ Endurecimiento: errores uniformes, logging, tests automáticos, sin secretos hardcodeados
 
 ### Frontend

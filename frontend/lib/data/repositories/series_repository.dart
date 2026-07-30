@@ -12,7 +12,7 @@ class SeriesRepository {
   Future<List<Series>> getPopularSeries() async {
     try {
       final response = await _dio.get('/content/popular/series');
-      final results = response.data['results'] as List;
+      final results = response.data as List;
       return results.map((e) => Series.fromJson(e)).toList();
     } catch (e) {
       rethrow;
@@ -31,7 +31,7 @@ class SeriesRepository {
   Future<List<Episode>> getSeriesEpisodes(int seriesId, int seasonNumber) async {
     try {
       final response = await _dio.get('/content/series/$seriesId/season/$seasonNumber');
-      final results = response.data['episodes'] as List;
+      final results = response.data as List;
       return results.map((e) => Episode.fromJson(e)).toList();
     } catch (e) {
       rethrow;

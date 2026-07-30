@@ -8,21 +8,28 @@ class TrackingRepository {
 
   TrackingRepository(this._dio);
 
-  Future<void> markAsWatched(int episodeId) async {
+  Future<void> markAsWatched(Episode episode) async {
     try {
-      await _dio.post('/tracking/watch', data: {'episode_id': episodeId});
+      await _dio.post('/tracking/watch', data: _episodeRef(episode));
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<void> removeFromWatched(int episodeId) async {
+  Future<void> removeFromWatched(Episode episode) async {
     try {
-      await _dio.post('/tracking/unwatch', data: {'episode_id': episodeId});
+      await _dio.post('/tracking/unwatch', data: _episodeRef(episode));
     } catch (e) {
       rethrow;
     }
   }
+
+  Map<String, dynamic> _episodeRef(Episode episode) => {
+    'episode_id': episode.id,
+    'series_id': episode.seriesId,
+    'season_number': episode.seasonNumber,
+    'episode_number': episode.episodeNumber,
+  };
 
   Future<List<Episode>> getPendingEpisodes() async {
     try {

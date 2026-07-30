@@ -10,7 +10,7 @@ class UserRegister(BaseModel):
 
 
 class UserLogin(BaseModel):
-    username: str
+    username: str = Field(description="Username or email")
     password: str
 
 

@@ -7,13 +7,11 @@
 Backend de un clon simplificado de **TvTime** (tracking de series y películas). Es un **API Gateway / orquestador** en Python entre:
 
 - Un **frontend Flutter** (móvil/web), desarrollado por otra persona del equipo, que consume esta API vía REST/JSON.
-- Una base de datos **MySQL** local.
-- Dos APIs externas: **Trakt.tv** (estado de tracking: visto/pendiente, historial, watchlist) y **TMDB** (metadatos e imágenes: pósters, sinopsis, temporadas, episodios).
+- Una base de datos **MySQL** local, que también guarda el tracking por usuario (visto/pendiente/historial/watchlist) — no depende de ningún servicio externo.
+- Una API externa: **TMDB** (metadatos e imágenes: pósters, sinopsis, temporadas, episodios).
 
 ```
-[Frontend Flutter] <---> [Backend API Python] <---> [MySQL local]
-                                 |
-                                 +---> [Trakt.tv API]  (estado de usuario)
+[Frontend Flutter] <---> [Backend API Python] <---> [MySQL local]  (tracking por usuario)
                                  |
                                  +---> [TMDB API]      (metadatos/imágenes)
 ```
@@ -54,10 +52,10 @@ backend/
 │   ├── db/
 │   │   ├── session.py           # engine + sessionmaker async
 │   │   └── base.py               # Base declarativa
-│   ├── models/                  # tablas SQLAlchemy (user, trakt_credentials, ...)
+│   ├── models/                  # tablas SQLAlchemy (user, series_tracking, watched_episode, ...)
 │   ├── schemas/                  # DTOs Pydantic (request/response)
-│   ├── api/v1/                   # routers: auth, trakt_auth, content, sync
-│   ├── services/                  # tmdb_client, trakt_client, cache
+│   ├── api/v1/                   # routers: auth, content, library, tracking
+│   ├── services/                  # tmdb_client, cache
 │   └── dependencies.py           # get_db, get_current_user, etc.
 ├── alembic/                      # migraciones
 └── tests/
@@ -65,10 +63,9 @@ backend/
 
 ## Convenciones y reglas de trabajo
 
-- **Secretos**: nunca hardcodear `TMDB_API_KEY`, `TRAKT_CLIENT_ID`, `TRAKT_CLIENT_SECRET`, `TRAKT_REDIRECT_URI`, `JWT_SECRET_KEY`, `DATABASE_URL`. Siempre vía `pydantic-settings` desde variables de entorno (`app/core/config.py`). `.env` está en `.gitignore`; `.env.example` se mantiene actualizado con las claves (sin valores reales) cuando se añade una nueva variable.
-- **Errores**: cualquier fallo de servicio externo (Trakt/TMDB caídos, rate limit, timeout) se captura de forma centralizada en `core/exceptions.py` (exception handler global de FastAPI), no con try/except repetido en cada endpoint. Formato uniforme, p. ej. `{ "error": "...", "code": 503 }`.
+- **Secretos**: nunca hardcodear `TMDB_API_KEY`, `JWT_SECRET_KEY`, `DATABASE_URL`. Siempre vía `pydantic-settings` desde variables de entorno (`app/core/config.py`). `.env` está en `.gitignore`; `.env.example` se mantiene actualizado con las claves (sin valores reales) cuando se añade una nueva variable.
+- **Errores**: cualquier fallo de servicio externo (TMDB caído, rate limit, timeout) se captura de forma centralizada en `core/exceptions.py` (exception handler global de FastAPI), no con try/except repetido en cada endpoint. Formato uniforme, p. ej. `{ "error": "...", "code": 503 }`.
 - **Caching**: respuestas de `/shows/{id}` y `/search` se cachean en memoria (TTL 24h) vía `cachetools.TTLCache`, con interfaz desacoplada para poder migrar a Redis sin tocar endpoints.
-- **Tokens de Trakt**: sensibles (dan acceso a la cuenta del usuario). Considerar cifrado en reposo (`cryptography.Fernet`). Implementar refresco automático cuando `expires_at` esté próximo/pasado.
 - **CORS**: parametrizado por variable de entorno (`ALLOWED_ORIGINS`), nunca hardcodeado, para permitir el entorno de desarrollo Flutter (web y móvil).
 - **Migraciones**: todo cambio de esquema pasa por Alembic (`alembic revision --autogenerate` + revisión manual del script), nunca se modifica el esquema a mano contra la base de datos.
 - **Contrato con el frontend**: cada endpoint se documenta con Pydantic para que Swagger UI (`/docs`) sirva de referencia de contrato fiable para la compañera de Flutter. No romper compatibilidad de un endpoint ya consumido sin avisar.
@@ -111,5 +108,4 @@ ruff check .
 
 ## Referencias externas
 
-- Trakt API docs: https://trakt.docs.apiary.io/
 - TMDB API docs: https://developer.themoviedb.org/docs

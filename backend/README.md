@@ -1,6 +1,7 @@
 # TvTime Clone — Backend
 
-API Gateway en Python/FastAPI entre el frontend Flutter, MySQL y las APIs de Trakt.tv y TMDB.
+API Gateway en Python/FastAPI entre el frontend Flutter, MySQL (que guarda el tracking por
+usuario) y la API de TMDB.
 Ver [REQUISITOS_BACKEND.md](../REQUISITOS_BACKEND.md) para la especificación completa.
 
 Este directorio (`backend/`) contiene únicamente el backend; es parte de un monorepo que más
@@ -19,7 +20,7 @@ Ver el checklist de fases en la sección 7 de [REQUISITOS_BACKEND.md](../REQUISI
 
 ```bash
 cp .env.example .env
-# Rellena TMDB_API_KEY, TRAKT_CLIENT_ID/SECRET, JWT_SECRET_KEY, etc.
+# Rellena TMDB_API_KEY, JWT_SECRET_KEY, etc.
 
 docker compose up --build
 ```

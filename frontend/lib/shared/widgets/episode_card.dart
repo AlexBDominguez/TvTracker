@@ -97,7 +97,7 @@ class EpisodeCard extends ConsumerWidget {
               size: 28,
             ),
             onPressed: () {
-              ref.read(watchedEpisodesProvider.notifier).toggleWatched(context, episode.id);
+              ref.read(watchedEpisodesProvider.notifier).toggleWatched(context, episode);
             },
           ),
         ],

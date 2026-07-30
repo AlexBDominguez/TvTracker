@@ -5,7 +5,6 @@ part 'episode.g.dart';
 
 @freezed
 class Episode with _$Episode {
-  @JsonSerializable(fieldRename: FieldRename.snake)
   const factory Episode({
     required int id,
     required String name,

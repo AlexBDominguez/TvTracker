@@ -56,7 +56,7 @@ class EpisodeListTile extends ConsumerWidget {
               color: isWatched ? AppColors.success : AppColors.textSecondary,
             ),
             onPressed: () {
-              ref.read(watchedEpisodesProvider.notifier).toggleWatched(context, episode.id);
+              ref.read(watchedEpisodesProvider.notifier).toggleWatched(context, episode);
             },
           ),
         ],

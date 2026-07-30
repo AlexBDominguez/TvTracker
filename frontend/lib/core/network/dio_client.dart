@@ -1,8 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-const String baseUrl = 'http://localhost:8000/api/v1';
+// Use 10.0.2.2 to connect to the host machine's localhost from the Android emulator
+const String baseUrl = 'http://10.0.2.2:8000/api/v1';
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
@@ -16,7 +17,8 @@ final dioProvider = Provider<Dio>((ref) {
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final token = await ref.read(authRepositoryProvider).getToken();
+        const storage = FlutterSecureStorage();
+        final token = await storage.read(key: 'auth_token');
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }

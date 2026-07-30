@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/user.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
@@ -25,9 +26,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _checkAuthStatus() async {
     final token = await _authRepository.getToken();
     if (token != null) {
-      // Here you would typically fetch the user profile
-      // For now, we'll just assume authenticated
-      state = AuthState(status: AuthStatus.authenticated);
+      try {
+        final user = await _authRepository.getMe();
+        state = AuthState(status: AuthStatus.authenticated, user: user);
+      } catch (e) {
+        state = AuthState(status: AuthStatus.unauthenticated);
+      }
     } else {
       state = AuthState(status: AuthStatus.unauthenticated);
     }
@@ -36,6 +40,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> login(String email, String password) async {
     try {
       final user = await _authRepository.login(email, password);
+      state = AuthState(status: AuthStatus.authenticated, user: user);
+    } catch (e) {
+      state = AuthState(status: AuthStatus.unauthenticated);
+      rethrow;
+    }
+  }
+
+  Future<void> register(String username, String email, String password) async {
+    try {
+      final user = await _authRepository.register(username, email, password);
       state = AuthState(status: AuthStatus.authenticated, user: user);
     } catch (e) {
       state = AuthState(status: AuthStatus.unauthenticated);

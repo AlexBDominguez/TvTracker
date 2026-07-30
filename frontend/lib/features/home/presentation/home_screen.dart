@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/colors.dart';
+import 'package:frontend/features/auth/application/auth_providers.dart';
 import 'package:frontend/features/home/application/home_providers.dart';
 import 'package:frontend/features/home/presentation/widgets/continue_watching_card.dart';
 import 'package:frontend/shared/widgets/episode_card.dart';
@@ -14,6 +15,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
+    final authState = ref.watch(authStateProvider);
     final homeState = ref.watch(homeProvider);
     final continueWatching = ref.watch(continueWatchingProvider);
 
@@ -23,13 +25,23 @@ class HomeScreen extends ConsumerWidget {
           slivers: [
             SliverAppBar(
               backgroundColor: AppColors.background,
-              pinned: true,
-              expandedHeight: 150.0,
+              pinned: false,
+              expandedHeight: 120.0,
               flexibleSpace: FlexibleSpaceBar(
-                titlePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                title: Text(
-                  'Hola, Nuria 👋', // This will be updated with the user's name
-                  style: textTheme.displayMedium,
+                titlePadding: const EdgeInsets.all(16),
+                title: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hola, ${authState.user?.name ?? ''} 👋',
+                      style: textTheme.displayMedium,
+                    ),
+                    Text(
+                      'Tienes ${state.today.length + state.thisWeek.length + state.older.length} episodios pendientes',
+                      style: textTheme.bodyMedium,
+                    ),
+                  ],
                 ),
               ),
               actions: [
@@ -46,7 +58,7 @@ class HomeScreen extends ConsumerWidget {
                 }
                 return SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
                     child: ContinueWatchingCard(info: info),
                   ),
                 );
@@ -65,7 +77,7 @@ class HomeScreen extends ConsumerWidget {
                     (context, index) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: EpisodeCard(episode: state.today[index]),
+                        child: EpisodeCard(episode: state.today[index], status: EpisodeCardStatus.today),
                       );
                     },
                     childCount: state.today.length,
@@ -103,7 +115,7 @@ class HomeScreen extends ConsumerWidget {
                     (context, index) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: EpisodeCard(episode: state.older[index]),
+                        child: EpisodeCard(episode: state.older[index], status: EpisodeCardStatus.late),
                       );
                     },
                     childCount: state.older.length,
@@ -113,39 +125,7 @@ class HomeScreen extends ConsumerWidget {
             ],
           ],
         ),
-        loading: () => CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              backgroundColor: AppColors.background,
-              pinned: true,
-              expandedHeight: 150.0,
-              flexibleSpace: FlexibleSpaceBar(
-                titlePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                title: Text(
-                  'Hola, Nuria 👋',
-                  style: textTheme.displayMedium,
-                ),
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.notifications_none_rounded),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: EpisodeCardShimmer(),
-                  );
-                },
-                childCount: 5,
-              ),
-            ),
-          ],
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => ErrorDisplay(
           message: 'No se pudieron cargar los episodios pendientes.',
           onRetry: () => ref.invalidate(homeProvider),

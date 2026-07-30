@@ -49,7 +49,16 @@ class _SeriesDetailScreenState extends ConsumerState<SeriesDetailScreen> with Si
                 SliverAppBar(
                   expandedHeight: 300.0,
                   pinned: true,
-                  title: Text(series.name),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.favorite_border),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.more_vert),
+                      onPressed: () {},
+                    ),
+                  ],
                   flexibleSpace: FlexibleSpaceBar(
                     background: Stack(
                       fit: StackFit.expand,
@@ -57,21 +66,47 @@ class _SeriesDetailScreenState extends ConsumerState<SeriesDetailScreen> with Si
                         CachedNetworkImage(
                           imageUrl: 'https://image.tmdb.org/t/p/w780${series.backdropPath}',
                           fit: BoxFit.cover,
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withOpacity(0.6),
                           colorBlendMode: BlendMode.darken,
                         ),
                         Positioned(
                           bottom: 16,
                           left: 16,
-                          child: Hero(
-                            tag: 'series-poster-${series.id}',
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: CachedNetworkImage(
-                                imageUrl: 'https://image.tmdb.org/t/p/w500${series.posterPath}',
-                                width: 100,
+                          right: 16,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Hero(
+                                tag: 'series-poster-${series.id}',
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: CachedNetworkImage(
+                                    imageUrl: 'https://image.tmdb.org/t/p/w500${series.posterPath}',
+                                    width: 100,
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      series.name,
+                                      style: textTheme.displayMedium,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Drama • Ciencia ficción • 2022', // Placeholder
+                                      style: textTheme.bodyMedium,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -85,10 +120,18 @@ class _SeriesDetailScreenState extends ConsumerState<SeriesDetailScreen> with Si
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(series.overview, style: textTheme.bodyLarge),
-                        const SizedBox(height: 8),
-                        const Chip(
-                          label: Text('Siguiendo ✓'),
-                          backgroundColor: AppColors.primary,
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            const Chip(
+                              label: Text('Siguiendo ✓'),
+                              backgroundColor: AppColors.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.star, color: AppColors.warning, size: 16),
+                            const SizedBox(width: 4),
+                            Text('${series.voteAverage}/10', style: textTheme.bodyMedium),
+                          ],
                         ),
                       ],
                     ),
@@ -142,15 +185,7 @@ class _SeriesDetailScreenState extends ConsumerState<SeriesDetailScreen> with Si
                         itemCount: episodeList.length,
                         itemBuilder: (context, index) => EpisodeListTile(episode: episodeList[index]),
                       ),
-                      loading: () => ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: 10,
-                        itemBuilder: (context, index) => const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                          child: EpisodeCardShimmer(),
-                        ),
-                      ),
+                      loading: () => const Center(child: CircularProgressIndicator()),
                       error: (err, stack) => ErrorDisplay(
                         message: 'No se pudieron cargar los episodios.',
                         onRetry: () => ref.invalidate(seasonEpisodesProvider),
@@ -173,7 +208,7 @@ class _SeriesDetailScreenState extends ConsumerState<SeriesDetailScreen> with Si
             ),
           );
         },
-        loading: () => const Center(child: ShimmerLoading(width: double.infinity, height: double.infinity)),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => ErrorDisplay(
           message: 'No se pudo cargar la información de la serie.',
           onRetry: () => ref.invalidate(seriesDetailProvider(widget.seriesId)),

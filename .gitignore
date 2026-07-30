@@ -1,0 +1,19 @@
+# IDE-specific files
+.idea/
+*.iml
+
+# Flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.dart_tool/
+build/
+
+# Backend
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.env
+dist/
+*.egg-info/
+.DS_Store

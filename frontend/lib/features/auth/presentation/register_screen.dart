@@ -2,28 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/colors.dart';
 import 'package:frontend/features/auth/application/auth_providers.dart';
-import 'package:go_router/go_router.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _login() {
-    ref.read(authStateProvider.notifier).login(
+  void _register() {
+    ref.read(authStateProvider.notifier).register(
+          _usernameController.text,
           _emailController.text,
           _passwordController.text,
         );
@@ -34,6 +36,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -41,17 +46,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Bienvenido',
+              'Crear cuenta',
               style: textTheme.displayLarge,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Inicia sesión para continuar',
-              style: textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
             const SizedBox(height: 48),
+            TextField(
+              controller: _usernameController,
+              decoration: InputDecoration(
+                labelText: 'Nombre de usuario',
+                filled: true,
+                fillColor: AppColors.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             TextField(
               controller: _emailController,
               decoration: InputDecoration(
@@ -80,7 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             const SizedBox(height: 32),
             ElevatedButton(
-              onPressed: _login,
+              onPressed: _register,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: AppColors.primary,
@@ -88,14 +100,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: Text('Iniciar Sesión', style: textTheme.headlineMedium),
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                GoRouter.of(context).go('/register');
-              },
-              child: const Text('¿No tienes cuenta? Regístrate'),
+              child: Text('Registrarse', style: textTheme.headlineMedium),
             ),
           ],
         ),

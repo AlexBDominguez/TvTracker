@@ -39,6 +39,8 @@ class EpisodeListTile extends ConsumerWidget {
                 Text(
                   '${episode.episodeNumber}. ${episode.name}',
                   style: textTheme.bodyLarge,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 if (episode.airDate != null)

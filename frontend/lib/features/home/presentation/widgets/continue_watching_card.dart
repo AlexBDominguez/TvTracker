@@ -38,16 +38,22 @@ class ContinueWatchingCard extends StatelessWidget {
                 Text(
                   info.series.name,
                   style: textTheme.headlineMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'T${info.episode.seasonNumber} · E${info.episode.episodeNumber} ▾',
                   style: textTheme.bodyMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   info.episode.name,
                   style: textTheme.bodySmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 16),
                 const LinearProgressIndicator(
